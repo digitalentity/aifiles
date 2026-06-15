@@ -1,7 +1,6 @@
----
-name: git-commit
-description: Guidelines for preferred Git commit message style. Apply this skill when preparing a git commit message.
----
+______________________________________________________________________
+
+## name: git-commit description: Guidelines for preferred Git commit message style. Apply this skill when preparing a git commit message.
 
 # Git Commit Messages
 
