@@ -11,6 +11,10 @@ def install_path(src, dst, use_symlink=False, relative=False):
     If use_symlink is True, a symlink is created.
     If use_symlink is False, files/directories are copied.
     """
+    if os.path.realpath(src) == os.path.realpath(dst):
+        print(f"Source and destination resolve to the same path: {dst}. Skipping.")
+        return
+
     if os.path.lexists(dst):
         if os.path.islink(dst):
             print(f"Removing existing symlink: {dst}")
