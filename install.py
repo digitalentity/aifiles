@@ -4,11 +4,12 @@ import sys
 import shutil
 import argparse
 
-def create_symlink(src, dst, relative=False):
+def install_path(src, dst, use_symlink=False, relative=False):
     """
-    Creates a symlink from src to dst.
-    If dst already exists, it is removed first to ensure the symlink is updated.
-    If relative is True, a relative symlink is created.
+    Installs src to dst by either symlinking or copying.
+    If dst already exists, it is removed first to ensure a clean install.
+    If use_symlink is True, a symlink is created.
+    If use_symlink is False, files/directories are copied.
     """
     if os.path.lexists(dst):
         if os.path.islink(dst):
@@ -24,15 +25,23 @@ def create_symlink(src, dst, relative=False):
     # Ensure the parent directory exists
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     
-    if relative:
-        abs_src = os.path.abspath(src)
-        abs_dst_dir = os.path.dirname(os.path.abspath(dst))
-        link_target = os.path.relpath(abs_src, abs_dst_dir)
+    if use_symlink:
+        if relative:
+            abs_src = os.path.abspath(src)
+            abs_dst_dir = os.path.dirname(os.path.abspath(dst))
+            link_target = os.path.relpath(abs_src, abs_dst_dir)
+        else:
+            link_target = os.path.abspath(src)
+            
+        os.symlink(link_target, dst)
+        print(f"Created symlink: {dst} -> {link_target}")
     else:
-        link_target = os.path.abspath(src)
-        
-    os.symlink(link_target, dst)
-    print(f"Created symlink: {dst} -> {link_target}")
+        if os.path.isdir(src):
+            shutil.copytree(src, dst)
+            print(f"Copied directory: {src} -> {dst}")
+        else:
+            shutil.copy2(src, dst)
+            print(f"Copied file: {src} -> {dst}")
 
 def add_to_gitignore(repo_path, folder_name):
     """
@@ -64,26 +73,27 @@ def add_to_gitignore(repo_path, folder_name):
                     f.write("\n")
             f.write(f"{folder_name}/\n")
 
-def install_skills_and_context(skills_src_dir, agents_src_file, skills_dst_dir, agents_dst_files, skills, relative=False):
+def install_skills_and_context(skills_src_dir, agents_src_file, skills_dst_dir, agents_dst_files, skills, use_symlink=False, relative=False):
     """
     Helper function to install skills and context files to a target directory.
     """
     # 1. Install skills
     if skills_dst_dir:
         for skill in skills:
-            create_symlink(
+            install_path(
                 os.path.join(skills_src_dir, skill),
                 os.path.join(skills_dst_dir, skill),
+                use_symlink=use_symlink,
                 relative=relative
             )
             
     # 2. Install context/AGENTS file(s)
     for dst_file in agents_dst_files:
-        create_symlink(agents_src_file, dst_file, relative=relative)
+        install_path(agents_src_file, dst_file, use_symlink=use_symlink, relative=relative)
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Install AI agent skills and context files (Gemini, Claude, Pi) via symlinks globally or locally to a repository."
+        description="Install AI agent skills and context files (Gemini, Claude, Pi) globally or locally to a repository."
     )
     parser.add_argument(
         "-u", "--user",
@@ -96,6 +106,11 @@ def main():
         const=".",
         type=str,
         help="Path to the target repository (defaults to the current directory if specified without a path)."
+    )
+    parser.add_argument(
+        "-s", "--symlink",
+        action="store_true",
+        help="Use symbolic links instead of copying actual files/directories."
     )
     parser.add_argument(
         "--only",
@@ -164,7 +179,7 @@ def main():
             install_skills_and_context(
                 skills_src_dir, agents_src_file,
                 cfg["skills_dir"], cfg["agents_files"],
-                skills, relative=False
+                skills, use_symlink=args.symlink, relative=False
             )
             
         print("\nUser installation complete.")
@@ -223,7 +238,7 @@ def main():
             install_skills_and_context(
                 skills_src_dir, agents_src_file,
                 cfg["skills_dir"], cfg["agents_files"],
-                skills, relative=True
+                skills, use_symlink=args.symlink, relative=True
             )
             
         print("\nRepository installation complete.")
