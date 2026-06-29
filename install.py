@@ -97,7 +97,7 @@ def install_skills_and_context(skills_src_dir, agents_src_file, skills_dst_dir, 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Install AI agent skills and context files (Gemini, Claude, Pi) globally or locally to a repository."
+        description="Install AI agent skills and context files (Gemini, Claude, Pi, and Pi-go) globally or locally to a repository."
     )
     parser.add_argument(
         "-u", "--user",
@@ -118,8 +118,8 @@ def main():
     )
     parser.add_argument(
         "--only",
-        choices=["gemini", "claude", "pi"],
-        help="Only install for a specific agent (defaults to installing for all: Gemini, Claude, and Pi)."
+        choices=["gemini", "claude", "pi", "pi-go"],
+        help="Only install for a specific agent (defaults to installing for all: Gemini, Claude, Pi, and Pi-go)."
     )
     
     args = parser.parse_args()
@@ -151,7 +151,7 @@ def main():
             
     print(f"Found {len(skills)} skill(s) to install: {', '.join(skills)}")
     
-    target_agents = ["gemini", "claude", "pi"]
+    target_agents = ["gemini", "claude", "pi", "pi-go"]
     if args.only:
         target_agents = [args.only]
     
@@ -174,6 +174,11 @@ def main():
                 "name": "Pi",
                 "skills_dir": os.path.expanduser("~/.pi/agent/skills"),
                 "agents_files": [os.path.expanduser("~/.pi/agent/AGENTS.md")]
+            },
+            "pi-go": {
+                "name": "Pi-go",
+                "skills_dir": os.path.expanduser("~/.pi-go/agent/skills"),
+                "agents_files": [os.path.expanduser("~/.pi-go/agent/AGENTS.md")]
             }
         }
         
@@ -217,6 +222,15 @@ def main():
                 "agents_files": [
                     os.path.join(target_repo, ".pi", "SYSTEM.md"),
                     os.path.join(target_repo, ".pi", "AGENTS.md")
+                ]
+            },
+            "pi-go": {
+                "name": "Pi-go",
+                "dot_folders": [".pi-go"],
+                "skills_dir": os.path.join(target_repo, ".pi-go", "skills"),
+                "agents_files": [
+                    os.path.join(target_repo, ".pi-go", "SYSTEM.md"),
+                    os.path.join(target_repo, ".pi-go", "AGENTS.md")
                 ]
             }
         }
