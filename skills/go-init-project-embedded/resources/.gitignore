@@ -1,0 +1,4 @@
+build/
+toolchain/
+.antigravitycli/
+.claude/
